@@ -1,73 +1,63 @@
 import { Section } from './Section/Section';
 import { FeedbackOptions } from './Feedback/Feedback';
 import { Statistic } from './Statistics/Statistic';
-import Notification from './Notification/Notification';
+import { Notification } from './Notification/Notification';
+import { useState } from 'react';
 
-const { Component } = require('react');
+export const App = () => {
+  const [feedback, setFeedback] = useState({ good: 0, neutral: 0, bad: 0 });
 
-export class App extends Component {
-  state = {
-    good: 0,
-    neutral: 0,
-    bad: 0,
-  };
-
-  handleFeedback = feedback => {
-    this.setState(prevState => ({
-      ...prevState,
-      [feedback]: prevState[feedback] + 1,
+  const handleFeedback = option => {
+    setFeedback(prevFeedback => ({
+      ...prevFeedback,
+      [option]: prevFeedback[option] + 1,
     }));
   };
 
-  countTotalFeedback = () => {
-    const { good, neutral, bad } = this.state;
+  const countTotalFeedback = () => {
+    const { good, neutral, bad } = feedback;
     return good + neutral + bad;
   };
 
-  countPositiveFeedbackPercentage = () => {
-    const total = this.countTotalFeedback();
-    const good = this.state.good;
-    // const { good } = this.state;
+  const countPositiveFeedbackPercentage = () => {
+    const total = countTotalFeedback();
+    const { good } = feedback;
     return total ? Math.round((good / total) * 100) : 0;
   };
 
-  Notification = ({ message }) => <p>{message}</p>;
+  const isStatisticsVisible = countTotalFeedback() > 0;
+  return (
+    <div
+      style={{
+        height: '100vh',
+        display: 'flex',
+        flexDirection: 'column',
+        justifyContent: 'center',
+        alignItems: 'center',
+        fontSize: 40,
+        color: '#010101',
+      }}
+    >
+      <Section title="Please leave feedback">
+        <FeedbackOptions
+          options={['good', 'neutral', 'bad']}
+          onLeaveFeedback={handleFeedback}
+        />
+      </Section>
 
-  render() {
-    const isStatisticsVisible = this.countTotalFeedback() > 0;
-    return (
-      <div
-        style={{
-          height: '100vh',
-          display: 'flex',
-          flexDirection: 'column',
-          justifyContent: 'center',
-          alignItems: 'center',
-          fontSize: 40,
-          color: '#010101',
-        }}
-      >
-        <Section title="Please leave feedback">
-          <FeedbackOptions
-            options={Object.keys(this.state)}
-            onLeaveFeedback={this.handleFeedback}
+      {isStatisticsVisible ? (
+        <Section title="Statistics">
+          <Statistic
+            good={feedback.good}
+            neutral={feedback.neutral}
+            bad={feedback.bad}
+            total={countTotalFeedback()}
+            positivPrs={countPositiveFeedbackPercentage()}
           />
         </Section>
-
-        {isStatisticsVisible ? (
-          <Section title="Statistics">
-            <Statistic
-              good={this.state.good}
-              neutral={this.state.neutral}
-              bad={this.state.bad}
-              total={this.countTotalFeedback()}
-              positivPrs={this.countPositiveFeedbackPercentage()}
-            />
-          </Section>
-        ) : (
-          <Notification message="There is no feedback" />
-        )}
-      </div>
-    );
-  }
-}
+      ) : (
+        <Notification message="There is no feedback" />
+      )}
+    </div>
+  );
+};
